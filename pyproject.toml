@@ -1,0 +1,33 @@
+[project]
+name = "PyUMLS_Similarity"
+version = "0.0.5"
+authors = [
+  { name="Victor Murcia", email="victor.murciaruiz@va.gov" },
+]
+maintainers = [
+  {name="Victor Murcia", email="victor.murciaruiz@va.gov" }
+]
+description = "This package computes a variety of similarity metrics between concepts present in the UMLS database"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.7"
+dependencies = [
+  "pandas>=1.3.5",
+  "tqdm>=4.63.0"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+keywords = ["NLP", "semantic similarity", "medicine", "UMLS", "Lobster Thermidor"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project.urls]
+Homepage = "https://github.com/victormurcia/PyUMLS_Similarity"
+Repository = "https://github.com/victormurcia/PyUMLS_Similarity"
+Issues = "https://github.com/victormurcia/PyUMLS_Similarity/issues"
