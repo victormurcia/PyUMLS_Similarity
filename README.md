@@ -45,7 +45,7 @@ In order to work efficiently with the UMLS, you'll want to configure MySQL. A go
 
 ### UMLS Data
 
-You need to have a local instance of the UMLS installed in MySQL. This involves downloading UMLS data and importing it into your MySQL database. Follow the guidelines provided by the UMLS for [obtaining a license](https://uts.nlm.nih.gov/license.html) and [downloading the UMLS data](https://www.nlm.nih.gov/research/umls/licensedcontent/umlsknowledgesources.html).
+You need to have a local instance of the UMLS installed in MySQL. This involves downloading UMLS data and importing it into your MySQL database. Follow the guidelines provided by the UMLS for [obtaining a license](https://www.nlm.nih.gov/research/umls/index.html) and [downloading the UMLS data](https://www.nlm.nih.gov/research/umls/licensedcontent/umlsknowledgesources.html).
 
 ### UMLS-Interface and UMLS-Similarity Perl Modules
 
