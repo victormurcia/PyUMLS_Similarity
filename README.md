@@ -60,7 +60,7 @@ cpanm WordNet::Similarity
 
 ## Usage
 
-**IMPORTANT**: The first time you run a path based semantic similarity metric calculation, the UMLS Interface needs to create an index within MySQL of your UMLS instance for efficient pathing calculations in subsequent runs. This can be a long process depending on your machine hardware and your MySQL configuration. The default source vocabulary (SAB) is the UMLS Metathesaurus (MTH). Indexing this was relatively fast in my machine (a few minutes). It is possible to use/include other SABs as part of your UMLS Interface configuration like SNOMED, LOINC, CPT, etc. however, be warned that this will exponentially increase both the required memory for your process AND the time required for the indexing. For example, indexing SNOMED took about 2 days.   
+**IMPORTANT**: The first time you run a path based semantic similarity metric calculation, the UMLS Interface needs to create an index within MySQL of your UMLS instance for efficient pathing calculations in subsequent runs. This can be a long process depending on your machine hardware and your MySQL configuration. The default source vocabulary (SAB) is the Medical Subject Headings (MSH) in the UMLS Metathesaurus. Indexing this was relatively fast in my machine (a few minutes). It is possible to use/include other SABs as part of your UMLS Interface configuration like SNOMED, LOINC, CPT, etc. however, be warned that this will exponentially increase both the required memory for your process AND the time required for the indexing. For example, indexing SNOMED took about 2 days.   
 
 
 Below are some examples of how to use the PyUMLS_Similarity package.
