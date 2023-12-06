@@ -67,8 +67,8 @@ Below are some examples of how to use the PyUMLS_Similarity package.
 
 Start by initiating an instance of the PyUMLS_Similarity class:
 
-```
-from PyUMLS-Similarity import PyUMLS_Similarity
+```python 
+from PyUMLS_Similarity import PyUMLS_Similarity
 
 # define MySQL information that stores UMLS data in your computer
 mysql_info = {}
@@ -90,7 +90,7 @@ You can compute similarity metrics between UMLS concepts as shown below.
 
 You can either provide a list of tuples contains the CUIs to be compared:
 
-```
+```python 
 cui_pairs = [
     ('C0018563', 'C0037303'),
     ('C0035078', 'C0035078'),
@@ -99,7 +99,7 @@ cui_pairs = [
 ```
 Or you can provide a list of tuples containing the medical terms you want to be compare:
 
-```
+```python 
 cui_pairs = [
     ('hand', 'skull'),
     ('Renal failure', 'Kidney failure'),
@@ -109,7 +109,7 @@ cui_pairs = [
 
 ## Compute similarity using specific measures
 
-```
+```python 
 measures = ['lch', 'wup']
 similarity_df = umls_sim.similarity(cui_pairs, measures)
 
@@ -127,7 +127,7 @@ An example output would look something like this:
 
 To find the shortest path between concepts:
 
-```
+```python 
 shortest_path_df = umls_sim.find_shortest_path(cui_pairs)
 ```
 
@@ -135,7 +135,7 @@ shortest_path_df = umls_sim.find_shortest_path(cui_pairs)
 
 To find the least common subsumer (LCS) of concepts:
 
-```
+```python 
 lcs_df = umls_sim.find_least_common_subsumer(cui_pairs)
 ```
 
@@ -143,7 +143,7 @@ lcs_df = umls_sim.find_least_common_subsumer(cui_pairs)
 
 PyUMLS_Similarity also supports running tasks concurrently for efficiency. Each time the Perl module is called it triggers a new connection to the database. This overhead is actually the most time consuming portion and running functions sequentially and/or separately adds up more and more overhead. To save time, I've made it so multiple functions can be run concurrently via Python's threading module. This essentially removes the overhead time of any additional function calls.
 
-```
+```python 
 tasks = [
     {'function': 'similarity', 'arguments': (cui_pairs, measures)},
     {'function': 'shortest_path', 'arguments': (cui_pairs)},
