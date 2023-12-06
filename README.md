@@ -164,7 +164,7 @@ results = umls_sim.run_concurrently(tasks)
 
 ## Acknowledgements
 
-This package is based on the Perl module developed by Bridget McInnes and Ted Pedersen.
+This package is based on the Perl modules developed by Dr. Bridget McInnes and Dr. Ted Pedersen. The package umls-similarity by Donghua Chen also served as inspiration for this package.
 
 ## Future Developments
 Future developments of this package will 
