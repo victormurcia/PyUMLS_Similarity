@@ -207,10 +207,10 @@ class PyUMLS_Similarity:
             for cui1, cui2 in cui_pairs:
                 f_out.write(f"{cui1}<>{cui2}\n")
 
-        return self.find_shortest_path_from_file(in_file_path, forcerun)
+        return self.find_shortest_path_from_file(in_file_path, cui_pairs)
 
 
-    def find_shortest_path_from_file(self,in_file,forcerun=True,verbose=False):
+    def find_shortest_path_from_file(self,in_file,cui_pairs,forcerun=True,verbose=False):
         """
         Executes a Perl script to find the shortest path between CUI pairs from a file.
 
@@ -219,6 +219,7 @@ class PyUMLS_Similarity:
 
         Args:
             in_file (str): Path to the file containing CUI pairs.
+            cui_pairs(list): List of tuples containing the CUI pairs to compare
             forcerun (bool): If True, forces the calculation to run even if it might have been previously computed.
             verbose (bool): If True, prints additional debugging information.
 
@@ -325,9 +326,9 @@ class PyUMLS_Similarity:
             for cui1, cui2 in cui_pairs:
                 f_out.write(f"{cui1}<>{cui2}\n")
 
-        return self.find_least_common_subsumer_from_file(in_file_path)
+        return self.find_least_common_subsumer_from_file(in_file_path,cui_pairs)
 
-    def find_least_common_subsumer_from_file(self, in_file,forcerun=True,verbose=False):
+    def find_least_common_subsumer_from_file(self, in_file,cui_pairs,forcerun=True,verbose=False):
         """
         Executes a Perl script to find the least common subsumer (LCS) from a file containing CUI pairs.
 
@@ -336,6 +337,7 @@ class PyUMLS_Similarity:
 
         Args:
             in_file (str): Path to the file containing CUI pairs.
+            cui_pairs(list): List of tuples containing the CUI pairs to compare
             forcerun (bool): If True, forces the calculation to run even if it might have been previously computed.
             verbose (bool): If True, prints additional debugging information.
 
