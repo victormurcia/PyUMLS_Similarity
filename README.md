@@ -94,7 +94,6 @@ You can either provide a list of tuples contains the CUIs to be compared:
 cui_pairs = [
     ('C0018563', 'C0037303'),
     ('C0035078', 'C0035078'),
-    ('C0018787' ,'C0027061')
 ]
 ```
 Or you can provide a list of tuples containing the medical terms you want to be compare:
@@ -103,7 +102,6 @@ Or you can provide a list of tuples containing the medical terms you want to be 
 cui_pairs = [
     ('hand', 'skull'),
     ('Renal failure', 'Kidney failure'),
-    ('Heart' ,'Myocardium')
 ]
 ```
 
@@ -120,7 +118,6 @@ An example output would look something like this:
 |----|---------------|---------------|----------|----------|-------|-------|
 | 0  | hand          | skull         | C0018563 | C0037303 | 0.500 | 0.700 |
 | 1  | Renal failure | Kidney failure| C0035078 | C0035078 | 1.000 | 1.000 |
-| 2  | Heart         | Myocardium    | C0018787 | C0027061 | 0.823 | 0.875 |
 
 
 ### Finding Shortest Path
@@ -131,6 +128,12 @@ To find the shortest path between concepts:
 shortest_path_df = umls_sim.find_shortest_path(cui_pairs)
 ```
 
+An example output would look something like this:
+|    | Term 1        | Term 2        | CUI 1    | CUI 2    | Path Length   | Path                                              |
+|----|---------------|---------------|----------|----------|---------------|---------------------------------------------------|
+| 0  | hand          | skull         | C0018563 | C0037303 |  9            | C0018563 => C1140618 => C0015385 => C0005898 =... |
+| 1  | Renal failure | Kidney failure| C0035078 | C0035078 |  9            | C0018563 => C1140618 => C0015385 => C0005898 =... |
+
 ### Finding Least Common Subsumer
 
 To find the least common subsumer (LCS) of concepts:
@@ -138,6 +141,12 @@ To find the least common subsumer (LCS) of concepts:
 ```python 
 lcs_df = umls_sim.find_least_common_subsumer(cui_pairs)
 ```
+
+An example output would look something like this:
+|    | Term 1        | Term 2        | CUI 1    | CUI 2    | LCS                                | Min Depth | Max Depth |
+|----|---------------|---------------|----------|----------|------------------------------------|-----------|-----------|
+| 0  | hand          | skull         | C0018563 | C0037303 | Anatomy (MeSH Category) (C0002807) | 5         |      5    |
+| 1  | Renal failure | Kidney failure| C0035078 | C0035078 | Renal failure (C0035078)           | 1         |      1    |
 
 ### Concurrency
 
