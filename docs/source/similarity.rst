@@ -1,7 +1,7 @@
 Similarity Module
 =================
 
-.. automodule:: PyUMLS_Similarity.module.PyUMLS_Similarity
+.. automodule:: PyUMLS_Similarity
    :members:
    :undoc-members:
    :inherited-members:
