@@ -2,6 +2,8 @@
 
 This package computes a variety of semantic similarity metrics between concepts present in the UMLS (Unified Medical Language System) database. It serves as a Python wrapper based off the Perl modules ([UMLS Interface](https://metacpan.org/dist/UMLS-Interface) and [UMLS Similarity](https://metacpan.org/dist/UMLS-Similarity)) developed by Dr. Bridget McInnes and Dr. Ted Pedersen, offering an accessible and user-friendly interface for Python users.
 
+Check out the documentation here: https://pyumls-similarity.readthedocs.io/en/latest/
+
 ## Available Similarity Measures
 
     * The basic path measure --> path
