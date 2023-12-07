@@ -1,7 +1,21 @@
 # Configuration file for the Sphinx documentation builder.
+#
+# This file only contains a selection of the most common options. For a full
+# list see the documentation:
+# https://www.sphinx-doc.org/en/master/usage/configuration.html
+
+# -- REQUIREMENTS -----------------------------------------------------
+# pip install sphinx-material
+# pip install sphinxemoji
+
+import datetime
 import os
+import re
 import sys
-sys.path.insert(0, os.path.abspath("../src"))
+import asyncio
+import platform
+
+sys.path.insert(0, os.path.abspath("../"))
 # -- Project information
 
 project = 'PyUMLS-Similarity'
@@ -19,6 +33,14 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    "sphinx.ext.napoleon",
+    "sphinx.ext.autosectionlabel",
+    "sphinx.ext.viewcode",
+    "IPython.sphinxext.ipython_console_highlighting",
+    "IPython.sphinxext.ipython_directive",
+    "sphinxemoji.sphinxemoji",
+    "sphinx_copybutton",
+    "myst_nb",
 ]
 
 intersphinx_mapping = {
@@ -28,6 +50,22 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']
+
+# Ignore duplicated sections warning
+suppress_warnings = ["epub.duplicated_toc_entry"]
+nitpicky = False  # Set to True to get all warnings about crosslinks
+
+# Prefix document path to section labels, to use:
+# `path/to/file:heading` instead of just `heading`
+autosectionlabel_prefix_document = True
+
+# -- Options for autodoc -------------------------------------------------
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
+napoleon_use_param = False
+napoleon_use_ivar = False
+napoleon_use_rtype = False
+add_module_names = False  # If true, the current module name will be prepended to all description
 
 # -- Options for HTML output
 
