@@ -10,7 +10,7 @@ To use PyUMLS-Similarity, first install it using pip:
 
 .. code-block:: console
 
-   (.venv) $ pip install pyumls-similarity
+   (.venv) $ pip install PyUMLS-Similarity
 
 Computing Semantic Similarity
 -----------------------------
