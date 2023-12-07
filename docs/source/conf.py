@@ -2,8 +2,8 @@
 
 # -- Project information
 
-project = 'Lumache'
-copyright = '2021, Graziella'
+project = 'PyUMLS-Similarity'
+copyright = '2023, Victor M. Murcia'
 author = 'Graziella'
 
 release = '0.1'
