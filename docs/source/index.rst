@@ -22,9 +22,10 @@ Contents
 
 .. toctree::
    :maxdepth: 2
+   :caption: Modules
+   :titlesonly:
 
    usage
    installation
-   api
-   contributing
+   contributing   
    similarity
