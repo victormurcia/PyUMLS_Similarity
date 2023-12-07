@@ -27,3 +27,4 @@ Contents
    installation
    api
    contributing
+   similarity
