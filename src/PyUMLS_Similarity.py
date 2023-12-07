@@ -17,10 +17,10 @@ class PyUMLS_Similarity:
         Calculate similarity for each measure in a concurrent manner.
 
         Args:
-            cui_pairs (list of tuple): A list of tuples, where each tuple contains two CUIs for comparison.
-            measures (list of str): A list of strings representing the semantic similarity measures to be used.
-            precision (int): The precision of the similarity calculation.
-            forcerun (bool): A flag to force the run of the similarity calculation.
+            :cui_pairs (list of tuple): A list of tuples, where each tuple contains two CUIs for comparison.
+            :measures (list of str): A list of strings representing the semantic similarity measures to be used.
+            :precision (int): The precision of the similarity calculation.
+            :forcerun (bool): A flag to force the run of the similarity calculation.
 
         Returns:
             pandas.DataFrame: A DataFrame containing the similarity results for each measure.
