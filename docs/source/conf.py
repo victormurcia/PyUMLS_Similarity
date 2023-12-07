@@ -1,10 +1,12 @@
 # Configuration file for the Sphinx documentation builder.
-
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../../src'))
 # -- Project information
 
 project = 'PyUMLS-Similarity'
 copyright = '2023, Victor M. Murcia'
-author = 'Graziella'
+author = 'Victor M. Murcia'
 
 release = '0.1'
 version = '0.1.0'
