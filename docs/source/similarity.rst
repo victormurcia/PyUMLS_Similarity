@@ -1,5 +1,5 @@
 Similarity Module
 =================
 
-.. automodule:: PyUMLS_Similarity
+.. automodule:: src.PyUMLS_Similarity
    :members:
