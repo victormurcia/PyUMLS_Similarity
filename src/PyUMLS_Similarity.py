@@ -17,10 +17,10 @@ class PyUMLS_Similarity:
         Calculate similarity for each measure in a concurrent manner.
 
         Args:
-            :param cui_pairs (list of tuple): A list of tuples, where each tuple contains two CUIs for comparison.
-            :param measures (list of str): A list of strings representing the semantic similarity measures to be used.
-            :param precision (int): The precision of the similarity calculation.
-            :param forcerun (bool): A flag to force the run of the similarity calculation.
+            cui_pairs (list of tuple): A list of tuples, where each tuple contains two CUIs for comparison.
+            measures (list of str): A list of strings representing the semantic similarity measures to be used.
+            precision (int): The precision of the similarity calculation.
+            forcerun (bool): A flag to force the run of the similarity calculation.
 
         Returns:
             pandas.DataFrame: A DataFrame containing the similarity results for each measure.
@@ -219,7 +219,7 @@ class PyUMLS_Similarity:
 
         Args:
             in_file (str): Path to the file containing CUI pairs.
-            cui_pairs(list): List of tuples containing the CUI pairs to compare
+            cui_pairs(tuple): List containing CUI pairs
             forcerun (bool): If True, forces the calculation to run even if it might have been previously computed.
             verbose (bool): If True, prints additional debugging information.
 
@@ -230,11 +230,11 @@ class PyUMLS_Similarity:
 
         umls_sim_params = {}
         umls_sim_params["--database"] = self.mysql_info["database"]
-        umls_sim_params["--username"] = self.mysql_info["username"]
+        umls_sim_params["--username"] =self.mysql_info["username"]
         umls_sim_params["--password"] = self.mysql_info["password"]
-        umls_sim_params["--hostname"] = self.mysql_info["hostname"]
-        umls_sim_params["--socket"]   = self.mysql_info["socket"]
-        umls_sim_params["--length"]   = ""
+        umls_sim_params["--hostname"] =self.mysql_info["hostname"]
+        umls_sim_params["--socket"]  = self.mysql_info["socket"]
+        umls_sim_params["--length"] = ""
 
         if forcerun:
             umls_sim_params["--forcerun"] = ""
@@ -261,20 +261,33 @@ class PyUMLS_Similarity:
 
         # Decode stdout from bytes to string
         output = stdout.decode('utf-8')
-        #print(output)
+        print(output)
 
         # Process the output and extract data
         data = []
         for pair in cui_pairs:
             term1, term2 = pair
-            length_pattern = r'The shortest path \(length: (\d+)\) between ' + re.escape(term1) + r' \((.+?)\) and ' + re.escape(term2) + r' \((.+?)\):'
-            length_match = re.search(length_pattern, output)
-            if length_match:
-                path_length = length_match.group(1)
-                cui1 = length_match.group(2)
-                cui2 = length_match.group(3)
+            # Regex patterns for path and special no-path message
+            path_pattern = re.escape(term1) + r' \((.+?)\) and ' + re.escape(term2) + r' \((.+?)\):(?:\s+=>\s+.+?)*'
+            no_path_pattern = r'There is not a path between ' + re.escape(term1) + r' and ' + re.escape(term2)
+
+            path_match = re.search(path_pattern, output)
+            no_path_match = re.search(no_path_pattern, output)
+
+            if path_match:
+                # Extract the CUIs and path length
+                cui1 = path_match.group(1)
+                cui2 = path_match.group(2)
                 path = self.extract_path(output, term1, term2)
-                data.append([term1, term2, cui1, cui2, path_length, path])
+                # Extract the path length from the match
+                path_length_match = re.search(r'length: (\d+)', path_match.group(0))
+                path_length = path_length_match.group(1) if path_length_match else 'N/A'
+            elif no_path_match:
+                cui1, cui2, path_length, path = 'N/A', 'N/A', 'N/A', 'Path not found'
+            else:
+                cui1, cui2, path_length, path = 'N/A', 'N/A', 'N/A', 'No information'
+
+            data.append([term1, term2, cui1, cui2, path_length, path])
 
         # Creating the DataFrame
         df = pd.DataFrame(data, columns=['Term 1', 'Term 2', 'CUI 1', 'CUI 2', 'Path Length', 'Path'])
@@ -296,13 +309,18 @@ class PyUMLS_Similarity:
             str: A string representing the path of CUIs, or 'Path not found' if no path is extracted.
         """
         # Adjusted logic to extract the path from the output
-        path_pattern = re.escape(term1) + r' \(.+?\):(.+?)' + re.escape(term2) + r' \(.+?\)'
+        path_pattern = re.escape(term1) + r' \((C\d{7})\) and ' + re.escape(term2) + r' \((C\d{7})\):\s*(.+?)(?=\nThe shortest path \(length:|\Z)'
         path_match = re.search(path_pattern, output, re.DOTALL)
         if path_match:
-            path = path_match.group(1).strip()
-            # Extract CUIs from the path
-            cuis = re.findall(r'C\d{7}', path)
-            return ' => '.join(cuis)
+            cui1 = path_match.group(1)
+            cui2 = path_match.group(2)
+            path_segment = path_match.group(3).strip()
+            # Extract CUIs from the path segment
+            steps = re.findall(r'C\d{7}', path_segment)
+            if steps and steps[0] == cui1 and steps[-1] == cui2:
+                return ' => '.join(steps)
+            else:
+                return 'Inconsistent path'
         else:
             return 'Path not found'
 
