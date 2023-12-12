@@ -134,7 +134,7 @@ An example output would look something like this:
 |    | Term 1        | Term 2        | CUI 1    | CUI 2    | Path Length   | Path                                              |
 |----|---------------|---------------|----------|----------|---------------|---------------------------------------------------|
 | 0  | hand          | skull         | C0018563 | C0037303 |  9            | C0018563 => C1140618 => C0015385 => C0005898 =... |
-| 1  | Renal failure | Kidney failure| C0035078 | C0035078 |  9            | C0018563 => C1140618 => C0015385 => C0005898 =... |
+| 1  | Renal failure | Kidney failure| C0035078 | C0035078 |  1            | C0035078 |
 
 ### Finding Least Common Subsumer
 

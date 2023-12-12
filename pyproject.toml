@@ -1,6 +1,6 @@
 [project]
 name = "PyUMLS_Similarity"
-version = "0.0.10"
+version = "0.0.12"
 authors = [
   { name="Victor Murcia", email="victor.murciaruiz@va.gov" },
 ]
