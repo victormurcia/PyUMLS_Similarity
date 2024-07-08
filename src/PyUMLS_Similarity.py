@@ -1,3 +1,60 @@
+"""
+PyUMLS_Similarity Package
+
+This Python package provides tools for calculating semantic similarity and finding shortest paths between concepts
+in the Unified Medical Language System (UMLS). It leverages external Perl scripts and MySQL databases to perform 
+these operations, integrating them seamlessly into a Python environment.
+
+Modules:
+    - find_shortest_path_from_file: Executes a Perl script to find the shortest path between CUI or term pairs.
+    - combine_similarity_results: Combines similarity results from multiple measures into a single DataFrame.
+    - merge_results: Merges the result DataFrames from different tasks.
+    - run_concurrently: Executes multiple tasks concurrently using multithreading.
+
+Functions:
+    - find_shortest_path_from_file(self, pairs, forcerun=True, verbose=False):
+        Executes a Perl script to find the shortest path between CUI or term pairs.
+        
+    - combine_similarity_results(self, all_results, cui_pairs):
+        Combines the similarity results from multiple measures into a single DataFrame.
+        
+    - merge_results(self, results, use_cuis=True):
+        Merges the result DataFrames from different tasks.
+        
+    - run_concurrently(self, tasks):
+        Executes multiple tasks concurrently using multithreading.
+
+Usage:
+    1. Ensure that MySQL database credentials and Perl scripts are correctly set up.
+    2. Define tasks with appropriate functions and arguments.
+    3. Use run_concurrently to execute tasks and merge results.
+    4. Concept pairs can be given in terms of CUIs or terms.
+
+Example:
+    tasks = [
+        {'function': 'similarity', 'arguments': (cui_pairs, measures)},
+        {'function': 'shortest_path', 'arguments': (cui_pairs,)},
+        {'function': 'lcs', 'arguments': (cui_pairs,)}
+    ]
+    final_df = self.run_concurrently(tasks)
+
+Requirements:
+    - Python 3.10
+    - pandas
+    - tqdm
+    - concurrent.futures
+    - re
+    - subprocess
+    - MySQL database with UMLS data
+    - Perl scripts for similarity and shortest path calculations
+
+Author:
+    Victor M. Murcia Ruiz <victor.murciaruiz@va.gov>
+
+License:
+    MIT License
+
+"""
 import subprocess
 import os
 import tempfile
@@ -13,6 +70,27 @@ class PyUMLS_Similarity:
         self.mysql_info = mysql_info
         self.work_directory = work_directory if work_directory else r'C:\Strawberry\perl\site\bin'
 
+    @staticmethod
+    def is_cui(input_str):
+        return re.match(r"C\d+", input_str) is not None
+
+    def detect_cui_or_term(self, cui_pairs):
+        """
+        Detect whether the cui_pairs contain CUIs or terms.
+        
+        Args:
+            cui_pairs (list of tuples): A list of tuples containing pairs of CUIs or terms.
+        
+        Returns:
+            bool: True if cui_pairs contain CUIs, False if they contain terms.
+        """
+        def is_cui(value):
+            """Helper function to determine if a value is a CUI."""
+            return isinstance(value, str) and value.startswith('C') and value[1:].isdigit()
+        
+        # Check the first pair to determine the type
+        pair1, pair2 = cui_pairs[0]
+        return is_cui(pair1) and is_cui(pair2)
 
     def similarity(self, cui_pairs, measures=['lch'], precision=4, forcerun=True, verbose=False):
         """
@@ -70,7 +148,7 @@ class PyUMLS_Similarity:
 
         Args:
             all_results (list of tuples): A list where each tuple contains a measure 
-                                          name and its corresponding results.
+                                        name and its corresponding results.
             cui_pairs (list of tuples): A list of tuples, where each tuple contains 
                                         two CUIs for which similarity was calculated.
 
@@ -81,13 +159,20 @@ class PyUMLS_Similarity:
         combined_df = pd.DataFrame()
 
         for measure, measure_df in all_results:
-            measure_df = measure_df.rename(columns={measure: f'Similarity ({measure})'})
+            measure_column = f'Similarity ({measure})'
+            if measure_column in combined_df.columns:
+                if self.verbose:
+                    print(f"Skipping {measure} as it is already in the combined DataFrame")
+                continue
+            
+            measure_df = measure_df.rename(columns={measure: measure_column})
+            
             if combined_df.empty:
                 combined_df = measure_df
             else:
                 combined_df = pd.merge(combined_df, measure_df, on=['Term_1', 'CUI_1', 'Term_2', 'CUI_2'], how='outer')
 
-        return combined_df     
+        return combined_df   
     
     def similarity_from_file(self, in_file, similarity_measure='lch', precision=4, forcerun=True, verbose=False):
         """
@@ -165,12 +250,26 @@ class PyUMLS_Similarity:
             if verbose:
                 print(decoded_stdout)
 
-            # Regex pattern to extract the similarity results
-            pattern = re.compile(
-                r"(?P<similarity>\d+\.\d+)<>"
-                r"(?P<cui1>C\d+)\((?P<term1>.+?)\)<>"
-                r"(?P<cui2>C\d+)\((?P<term2>.+?)\)"
-            )
+            # Determine if the input is CUIs or terms
+            with open(in_file, 'r', encoding='utf-8') as f:
+                first_line = f.readline().strip()
+                cui1, cui2 = first_line.split('<>')
+                input_is_cui = self.is_cui(cui1) and self.is_cui(cui2)
+
+            if input_is_cui:
+                # Regex pattern to extract the similarity results for CUI pairs
+                pattern = re.compile(
+                    r"(?P<similarity>\d+\.\d+)<>"
+                    r"(?P<cui1>C\d+)\((?P<term1>.+?)\)<>"
+                    r"(?P<cui2>C\d+)\((?P<term2>.+?)\)"
+                )
+            else:
+                # Regex pattern to extract the similarity results for term pairs
+                pattern = re.compile(
+                    r"(?P<similarity>\d+\.\d+)<>"
+                    r"(?P<term1>.+?)\((?P<cui1>C\d+)\)<>"
+                    r"(?P<term2>.+?)\((?P<cui2>C\d+)\)"
+                )
 
             matches = pattern.finditer(decoded_stdout)
             results = []
@@ -198,7 +297,7 @@ class PyUMLS_Similarity:
         except Exception as e:
             raise RuntimeError(f"An error occurred: {str(e)}")
 
-    def find_shortest_path(self, cui_pairs, forcerun=True):
+    def find_shortest_path(self, cui_pairs, forcerun=True,verbose=False):
         """
         Calculates the shortest path between pairs of CUIs.
 
@@ -219,24 +318,24 @@ class PyUMLS_Similarity:
                     f_out.write(f"{cui1}<>{cui2}\n")
 
         #return self.find_shortest_path_from_file(in_file_path, cui_pairs)
-        return self.find_shortest_path_from_file(cui_pairs)
+        return self.find_shortest_path_from_file(cui_pairs,verbose=verbose)
 
 
-    def find_shortest_path_from_file(self, cui_pairs, forcerun=True, verbose=False):
+    def find_shortest_path_from_file(self, pairs, forcerun=True, verbose=False):
         """
-        Executes a Perl script to find the shortest path between CUI pairs.
+        Executes a Perl script to find the shortest path between CUI or term pairs.
 
         This method calls an external Perl script, passing in the necessary UMLS database parameters
-        and the CUI pairs directly. It captures and processes the script's output.
+        and the pairs directly. It captures and processes the script's output.
 
         Args:
-            cui_pairs (list): List containing CUI pairs.
+            pairs (list): List containing pairs (either CUIs or terms).
             forcerun (bool): If True, forces the calculation to run even if it might have been previously computed.
             verbose (bool): If True, prints additional debugging information.
 
         Returns:
             pandas.DataFrame: A DataFrame containing the shortest path results, including 
-                              the terms, CUIs, path length, and the path itself.
+                            the terms, CUIs, path length, and the path itself.
         """
         
         # Validate MySQL information
@@ -270,10 +369,12 @@ class PyUMLS_Similarity:
 
         results = []
 
-        for cui1, cui2 in cui_pairs:
+        for pair1, pair2 in pairs:
             process_args = [self.perl_bin_path, umls_similarity_script_path] + [f"{key}={value}" if value else key for key, value in umls_sim_params.items()]
-            process_args.append(cui1)
-            process_args.append(cui2)
+            process_args.append(pair1)
+            process_args.append(pair2)
+
+            print(pair1,pair2)
 
             if verbose:
                 kv_str = " ".join(process_args)
@@ -291,65 +392,97 @@ class PyUMLS_Similarity:
                 if verbose:
                     print(decoded_stdout)
 
-                # Define the regex pattern
-                pattern = re.compile(
-                    r"The shortest path \(length: (?P<length>\d+)\) between (?P<term1>.+?) \((?P<cui1>C\d+)\) and (?P<term2>.+?) \((?P<cui2>C\d+)\):\s*=> (?P<path>.+?)(?=\n\S|$)|"
-                    r"There is not a path between (?P<no_path_cui1>C\d+) and (?P<no_path_cui2>C\d+)"
-                )
+                # Determine if the input is CUIs or terms
+                input_is_cui = self.is_cui(pair1) and self.is_cui(pair2)
+
+                if input_is_cui:
+                    # Regex pattern to extract the shortest path results for CUI pairs
+                    pattern = re.compile(
+                        r"The shortest path \(length: (?P<length>\d+)\) between (?P<term1>.+?) \((?P<cui1>C\d+)\) and (?P<term2>.+?) \((?P<cui2>C\d+)\):\s*=> (?P<path>.+?)(?=\n\S|$)|"
+                        r"There is not a path between (?P<no_path_cui1>C\d+) and (?P<no_path_cui2>C\d+) given the current view of the UMLS."
+                    )
+                else:
+                    pattern = re.compile(
+                        r"The shortest path \(length: (?P<length>\d+)\) between (?P<term1>.+?) \((?P<cui1>C\d+)\) and (?P<term2>.+?) \((?P<cui2>C\d+)\):\s*=> (?P<path>.+?)(?=\n\S|$)|"
+                        r"There is not a path between (?P<no_path_term1>.+?) and (?P<no_path_term2>.+?)"
+                    )
 
                 matches = pattern.finditer(decoded_stdout)
-
+                print(decoded_stdout)
                 for match in matches:
-                    if match.group('length'):
-                        length = match.group('length')
-                        term1 = match.group('term1')
-                        cui1 = match.group('cui1')
-                        term2 = match.group('term2')
-                        cui2 = match.group('cui2')
-                        path = match.group('path')
-                        path_terms = re.findall(r"(C\d+) \((.+?)\)", path)
-                        path_string = " => ".join([f"{cui} ({term})" for cui, term in path_terms])
-                        results.append({
-                            'Term_1': term1,
-                            'CUI_1': cui1,
-                            'Term_2': term2,
-                            'CUI_2': cui2,
-                            'Length': length,
-                            'Path': path_string
-                        })
-                    else:
-                        cui1 = match.group('no_path_cui1')
-                        cui2 = match.group('no_path_cui2')
-                        if cui1 == cui2:
+                    print("Matched text:",match)
+                    if input_is_cui:
+                        if match.group('length'):
+                            length = match.group('length')
+                            term1 = match.group('term1')
+                            cui1 = match.group('cui1')
+                            term2 = match.group('term2')
+                            cui2 = match.group('cui2')
+                            path = match.group('path')
+                            path_terms = re.findall(r"(C\d+) \((.+?)\)", path)
+                            path_string = " => ".join([f"{cui} ({term})" for cui, term in path_terms])
                             results.append({
-                                'Term_1': None,
+                                'Term_1': term1,
                                 'CUI_1': cui1,
-                                'Term_2': None,
+                                'Term_2': term2,
                                 'CUI_2': cui2,
-                                'Length': 0,
-                                'Path': cui1
+                                'Length': length,
+                                'Path': path_string
                             })
                         else:
+                            cui1 = match.group('no_path_cui1')
+                            cui2 = match.group('no_path_cui2')
                             results.append({
                                 'Term_1': None,
                                 'CUI_1': cui1,
                                 'Term_2': None,
                                 'CUI_2': cui2,
+                                'Length': 'No path found' if cui1 != cui2 else 0,
+                                'Path': 'No path found' if cui1 != cui2 else cui1
+                            })
+                    else:
+                        if match.group('length'):
+                            length = match.group('length')
+                            term1 = match.group('term1')
+                            cui1 = match.group('cui1')
+                            term2 = match.group('term2')
+                            cui2 = match.group('cui2')
+                            path = match.group('path')
+                            path_terms = re.findall(r"(C\d+) \((.+?)\)", path)
+                            path_string = " => ".join([f"{cui} ({term})" for cui, term in path_terms])
+                            results.append({
+                                'Term_1': term1,
+                                'CUI_1': cui1,
+                                'Term_2': term2,
+                                'CUI_2': cui2,
+                                'Length': length,
+                                'Path': path_string
+                            })
+                        else:
+                            term1 = match.group('no_path_term1')
+                            term2 = match.group('no_path_term2')
+                            print(term1,term2)
+                            results.append({
+                                'Term_1': pair1,
+                                'CUI_1': None,
+                                'Term_2': pair2,
+                                'CUI_2': None,
                                 'Length': 'No path found',
                                 'Path': 'No path found'
                             })
 
+        
             except subprocess.CalledProcessError as e:
                 raise RuntimeError(f"Subprocess failed with error: {str(e)}")
             except Exception as e:
                 raise RuntimeError(f"An error occurred: {str(e)}")
-
+        print(results)
         # Create a DataFrame from the results
         df = pd.DataFrame(results)
 
         return df
 
-    def find_least_common_subsumer(self, cui_pairs):
+    def find_least_common_subsumer(self, cui_pairs,verbose=False):
         """
         Finds the least common subsumer (LCS) for given pairs of CUIs.
 
@@ -359,6 +492,7 @@ class PyUMLS_Similarity:
 
         Args:
             cui_pairs (list of tuple): A list of tuples, where each tuple contains two CUIs.
+            verbose (bool): If True, prints additional debugging information.
 
         Returns:
             pandas.DataFrame: A DataFrame containing the LCS results for each CUI pair, 
@@ -369,7 +503,7 @@ class PyUMLS_Similarity:
             for cui1, cui2 in cui_pairs:
                 f_out.write(f"{cui1}<>{cui2}\n")
 
-        return self.find_least_common_subsumer_from_file(in_file_path,cui_pairs)
+        return self.find_least_common_subsumer_from_file(in_file_path,cui_pairs,verbose=verbose)
 
     def find_least_common_subsumer_from_file(self, in_file, cui_pairs, forcerun=True, verbose=False):
         """
@@ -492,17 +626,21 @@ class PyUMLS_Similarity:
     def run_concurrently(self, tasks):
         """
         Executes multiple tasks concurrently using multithreading.
-
         This method takes a list of tasks, where each task is a dictionary specifying a function to run
         and its arguments. It uses multithreading to run these tasks concurrently, improving efficiency.
-
+        
         Args:
             tasks (list of dict): A list of tasks, where each task is a dictionary containing
                                 'function' (the function name as a string) and 'arguments' (a tuple of arguments).
-
+        
         Returns:
             dict: A dictionary with function names as keys and the results of the function calls as values.
         """
+        # Detect whether we are dealing with CUIs or terms based on the first task's arguments
+        cui_pairs = tasks[0]['arguments'][0]
+        print(cui_pairs)
+        use_cuis = self.detect_cui_or_term(cui_pairs)
+        
         with ThreadPoolExecutor() as executor:
             future_to_task = {executor.submit(self.run_task, task): task for task in tasks}
 
@@ -519,15 +657,16 @@ class PyUMLS_Similarity:
                         progress_bar.update(1)  # Update progress bar after each task completion
 
             # Merge the DataFrames if they exist
-            final_df = self.merge_results(results)
+            final_df = self.merge_results(results, use_cuis=use_cuis)
             return final_df
 
-    def merge_results(self, results):
+    def merge_results(self, results, use_cuis=True):
         """
         Merges the result DataFrames from different tasks.
 
         Args:
             results (dict): Dictionary with function names as keys and DataFrames as values.
+            use_cuis (bool): If True, merge using CUI columns; if False, merge using Term columns.
 
         Returns:
             pandas.DataFrame: Merged DataFrame from the results of different tasks.
@@ -538,12 +677,26 @@ class PyUMLS_Similarity:
                 dataframes.append(results[key])
 
         if dataframes:
-            # Start with the similarity DataFrame and keep all its columns
+            # Determine the columns to use for merging
+            if use_cuis:
+                merge_on = ['CUI_1', 'CUI_2']
+                non_merge_cols = ['Term_1', 'Term_2']
+            else:
+                merge_on = ['Term_1', 'Term_2']
+                non_merge_cols = ['CUI_1', 'CUI_2']
+
+            # Start with the first DataFrame and keep all its columns
             final_df = dataframes[0]
+
             for df in dataframes[1:]:
-                # Drop the Term_1 and Term_2 columns from other DataFrames before merging
-                df = df.drop(columns=['Term_1', 'Term_2'], errors='ignore')
-                final_df = pd.merge(final_df, df, on=['CUI_1', 'CUI_2'], how='outer')
+                # Only drop non-merge columns if they are present in the DataFrame
+                df = df.drop(columns=[col for col in non_merge_cols if col in df.columns], errors='ignore')
+                
+                # Merge while ensuring that merge columns are not dropped
+                final_df = pd.merge(final_df, df, on=merge_on, how='outer', suffixes=('', '_drop'))
+                # Drop duplicate columns created by the merge
+                final_df = final_df.loc[:, ~final_df.columns.str.endswith('_drop')]
+
             return final_df
         else:
             return pd.DataFrame()  # Return an empty DataFrame if no results
