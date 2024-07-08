@@ -136,6 +136,8 @@ An example output would look something like this:
 | 0  | hand          | skull         | C0018563 | C0037303 |  9            | C0018563 => C1140618 => C0015385 => C0005898 =... |
 | 1  | Renal failure | Kidney failure| C0035078 | C0035078 |  1            | C0035078 |
 
+**IMPORTANT: This function has not been optimized for performance yet and can lead to long runtimes.** 
+
 ### Finding Least Common Subsumer
 
 To find the least common subsumer (LCS) of concepts:
