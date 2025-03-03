@@ -23,6 +23,8 @@ Check out the documentation here: https://pyumls-similarity.readthedocs.io/en/la
     * Batet, et al (2011) --> batet
     * Sanchez, et al. (2012) --> sanchez
 
+![image](https://github.com/user-attachments/assets/27bbdb3d-411c-4649-894f-ef628ef53d38)
+
 ## Installation
 
 To install PyUMLS_Similarity, run the following command:
