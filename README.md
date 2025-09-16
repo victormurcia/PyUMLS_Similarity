@@ -1,5 +1,7 @@
 ## Overview
 
+**NOTE: There is an improved version of this here: https://github.com/victormurcia/PyUMLS_Similarity2. That version doesn't require any of the Perl dependencies and if fully native to Python.**
+
 This package computes a variety of semantic similarity metrics between concepts present in the UMLS (Unified Medical Language System) database. It serves as a Python wrapper based off the Perl modules ([UMLS Interface](https://metacpan.org/dist/UMLS-Interface) and [UMLS Similarity](https://metacpan.org/dist/UMLS-Similarity)) developed by Dr. Bridget McInnes and Dr. Ted Pedersen, offering an accessible and user-friendly interface for Python users.
 
 Check out the documentation here: https://pyumls-similarity.readthedocs.io/en/latest/
@@ -177,3 +179,4 @@ Future developments of this package will
 
 * allow for calculations of standard similarity metrics like cosine similarity, sorensen-dice index, jaccard similarity, and others
 * allow for modifications of the UMLS Interface Configuration file
+
